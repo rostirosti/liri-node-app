@@ -6,139 +6,115 @@ var Spotify = require('node-spotify-api');
 require('bandsintown')('codingbootcamp');
 
 ///Command line inputs
-const commandInput = process.argv[2];
-const commandInput2 = process.argv[3];
-const commandInput3 = process.argv.slice(3).join('%20');
-console.log(commandInput3);
+var commandInput = process.argv[2];
+var commandInput3 = process.argv.slice(3).join('%20');
 
-///Bug logging
-console.log("The command is" + commandInput);
 
-// ///fs read file to import keys
-// fs.readFile('keys.js', 'utf8', function (error, data) {
-//      if (error) {
-//        return console.log(error);
-//      }
+///fs read file to import keys
+fs.readFile('keys.js', 'utf8', function (error, data) {
+      if (error) {
+        return console.log("error with keys");
+      }
+        })
 
-// //     var Keys = data;
-//  console.log(data);    
-// //const spotify = new Spotify(keys.spotify)
-
-//      })
-
+///reading env file to import keys
 var spotify = new Spotify({
-  id: 'ac8b5bd597d946cf86642507045668ed',
-  secret: '447b449be0f2445caa153416dc575a1b'
-});
+   id: process.env.SPOTIFY_ID,
+   secret: process.env.SPOTIFY_SECRET
+ });
 
-// var spotifyThing = function (spotifyInput){
-//     axios.get(`https://rest.bandsintown.com/artists/${spotifyInput}/events?app_id=codingbootcamp`)
-//       .then(function (response) {
-//         if (response.status === 200) {
-//           for (let i = 0; i < response.data.length; i++) {
-//             console.log(JSON.stringify("Venue name: " + response.data[i].venue.name));
-//             console.log(JSON.stringify("Venue location: " + response.data[i].venue.city + " " + response.data[i].venue.region + " " + response.data[i].venue.country));
-//           };
-//         };
-//       })
 
-// };
 
-//code to retrieve the lists of artists.  currently does not work with artist names that have spaces in their name
-if (commandInput === 'concert-this') {
+//concertSearch uses bandsInTown API
+var concertSearch = function () {
   axios.get(`https://rest.bandsintown.com/artists/${commandInput3}/events?app_id=codingbootcamp`)
-    .then(function (response) {
-      if (response.status === 200) {
-        for (let i = 0; i < response.data.length; i++) {
-          console.log(JSON.stringify("Venue name: " + response.data[i].venue.name));
-          console.log(JSON.stringify("Venue location: " + response.data[i].venue.city + " " + response.data[i].venue.region + " " + response.data[i].venue.country));
-        };
+  .then(function (response) {
+    if (response.status === 200) {
+      for (let i = 0; i < response.data.length; i++) {
+        console.log(JSON.stringify("Venue name: " + response.data[i].venue.name));
+        console.log(JSON.stringify("Venue location: " + response.data[i].venue.city + " " + response.data[i].venue.region + " " + response.data[i].venue.country));
       };
-    })
+    };
+  })
+}
 
-  //spotifying a song name
-} else if (commandInput === 'spotify-this-song') {
+//spotifySearch API
+var spotifySearch = function () {
   spotify.search({
     type: 'track',
-    query: 'Stan'
+    query: commandInput3
   }, function (err, data) {
     if (err) {
       return console.log('Error occurred: ' + err);
     }
-    console.log(JSON.stringify(data.tracks.items[0].name));
+    console.log(JSON.stringify("Track name: " + data.tracks.items[0].name));
     for (let i = 0; i < data.tracks.items[0].artists.length; i++) {
-      console.log(JSON.stringify(data.tracks.items[0].artists[i].name));
+    console.log(JSON.stringify("Artists name: " + data.tracks.items[0].artists[i].name));
     };
-    console.log(JSON.stringify(data.tracks.items[0].preview_url));
-    console.log(JSON.stringify(data.tracks.items[0].album.name));
+    console.log(JSON.stringify("Preview url: " + data.tracks.items[0].preview_url));
+    console.log(JSON.stringify("Album name: " + data.tracks.items[0].album.name));
   });
-} else if (commandInput === 'do-what-it-says') {
-  //   // Includes the FS package for reading and writing packages
-  // const fs = require('fs');
+}
 
-  // Running the readFile module that's inside of fs.
-  // Stores the read information into the variable 'data'
+//fs import of random.txt which contains song list
+var songListImport = function () {
   fs.readFile('random.txt', 'utf8', function (err, data) {
     if (err) {
       return console.log(err);
     }
-
-    // Break the string down by comma separation and store the contents into the output array.
     const output = data.split(',');
-
-    // Loop Through the newly created output array
     for (let i = 0; i < output.length; i++) {
-     
-      // Print each element (item) of the array/
-      console.log(output[i]);
-
-      // axios.get(`https://rest.bandsintown.com/artists/${output[i]}/events?app_id=codingbootcamp`)
-      // .then(function (response) {
-      //   if (response.status === 200) {
-      //     for (let i = 0; i < response.data.length; i++) {
-      //       console.log(JSON.stringify("Venue name: " + response.data[i].venue.name));
-      //       console.log(JSON.stringify("Venue location: " + response.data[i].venue.city + " " + response.data[i].venue.region + " " + response.data[i].venue.country));
-      //     };
-      //   };
-      // })
-  
-    //spotifying a song name
-  
-
-
+      if ( i > 0) {
+        commandInput3 = output[i];
+        spotifySearch();
+      }
     }
-  });
 
-
+})
 };
 
-///importing file
+//omdb api using axios
+var movieThis = function () {
+
+// Building the query URL
+const queryUrl = `http://www.omdbapi.com/?apikey=trilogy&t=${commandInput3}`
+
+// This line is just to help us debug against the actual URL.
+console.log(queryUrl);
+
+// Then run a request to the IEX API with the movie specified
+axios.get(queryUrl).then(function(response) {
+
+  // If the request is successful
+  if (response.status === 200) {
+
+    console.log(`Movie Title: ${response.data.Title}`);
+    console.log(`Year: ${response.data.Year}`);
+    console.log(`IMDB Rating: ${response.data.Ratings[0].Value}`);
+    console.log(`Rotten Tomatoes Rating: ${response.data.Ratings[1].Value}`);
+    console.log(`Country of Production: ${response.data.Country}`);
+    console.log(`Language of movie: ${response.data.Language}`);
+    console.log(`Plot: ${response.data.Plot}`);
+    console.log(`Actors: ${response.data.Actors}`);
+  }
+});
+}
 
 
-
-
-
-
-
-// }
-
-// axios.get(`https://rest.bandsintown.com/artists/weezer/events?app_id=codingbootcamp`).then(function (response) {
-//   if (response.status === 200) {
-//     for (let i = 0; i < response.data.length; i++) {
-//       console.log(response.data[i].venue.name);
-//     };
-//   });
-
-// }
-
-// const data = response.data;
-// console.log(JSON.stringify(data.DISPLAY.BTC.USD, null, 2));
-
-
-//
-// else if (operand === 'movie-this') {
-//   outputNum = operations.multiply(num1, num2);
-// }
-// else if (operand === 'do-what-it-says') {
-//   outputNum = operations.multiply(num1, num2);
-//}
+///decision block for deciding which function to run based on the command line arguments
+if (commandInput === 'concert-this') {
+  concertSearch();
+  //spotifying a song name
+} else if (commandInput === 'spotify-this-song') {
+  if (!commandInput3){
+    commandInput3 = "What's My Age Again";
+  }
+  spotifySearch();
+} else if (commandInput === 'do-what-it-says') {
+  songListImport();
+} else if (commandInput === 'movie-this') {
+  if (!commandInput3){
+    commandInput3 = "Mr. Nobody";
+  }
+  movieThis();
+};
