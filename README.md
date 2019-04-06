@@ -23,5 +23,7 @@ To use the app you can run "node liri.js" + "what you want to do" + "the query".
 3. do-what-it-says (this will run through a list of songs contained in random.txt)
 4. movie-this + Movie Name
 
+Download the "Visual ReadMe" file from this repo for a visual walkthrough of the application "VisualReadMeLiri720.mov"
+
 
 ###Enjoy the app!  
